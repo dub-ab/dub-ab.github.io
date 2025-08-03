@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Season Progress</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2em;
+      background: #f4f4f4;
+    }
+    h1 {
+      margin-bottom: 1em;
+    }
+    #bar {
+      width: 80%;
+      margin: 0 auto;
+      background: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #progress {
+      height: 30px;
+      background: #2196f3;
+      width: 0%;
+      transition: width 0.5s ease-in-out;
+    }
+    #percent {
+      margin-top: 1em;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>MLB Season Progress</h1>
+  <div id="bar"><div id="progress"></div></div>
+  <p id="percent"></p>
+
+  <script>
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 2, 28); // March 28
+    const end = new Date(now.getFullYear(), 8, 29);   // September 29
+
+    const total = end - start;
+    const elapsed = now - start;
+    const percent = Math.max(0, Math.min(100, (elapsed / total) * 100));
+
+    document.getElementById("progress").style.width = percent + "%";
+    document.getElementById("percent").textContent =
+      percent.toFixed(2) + "% of the season has passed.";
+  </script>
+</body>
+</html>
