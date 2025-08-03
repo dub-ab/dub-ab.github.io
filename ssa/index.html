@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Season Progress</title>
+  <title>SSA Progress</title>
   <style>
     body {
       font-family: sans-serif;
@@ -10,45 +10,82 @@
       padding: 2em;
       background: #f4f4f4;
     }
+
     h1 {
       margin-bottom: 1em;
     }
-    #bar {
+
+    .bar-container {
       width: 80%;
-      margin: 0 auto;
+      margin: 1em auto;
       background: #ddd;
       border-radius: 10px;
       overflow: hidden;
     }
-    #progress {
+
+    .progress-bar {
       height: 30px;
-      background: #2196f3;
       width: 0%;
       transition: width 0.5s ease-in-out;
     }
-    #percent {
+
+    .progress-remaining {
+      background: #2196f3; /* Calm blue */
+    }
+
+.progress-elapsed {
+  background: #90caf9; /* Soft blue */
+}
+
+
+    .label {
       margin-top: 1em;
       font-size: 1.2em;
     }
+
+.label-elapsed {
+  font-weight: normal;
+  color: #333;
+  font-style: italic;
+}
+
   </style>
 </head>
 <body>
-  <h1>MLB Season Progress</h1>
-  <div id="bar"><div id="progress"></div></div>
-  <p id="percent"></p>
+  <h1>SSA Full Retirement Age Progress</h1>
+
+  <div class="bar-container">
+    <div id="progress-remaining" class="progress-bar progress-remaining"></div>
+  </div>
+  <p id="label-remaining" class="label"></p>
+
+  <p id="label-elapsed" class="label label-elapsed"></p>
+  <div class="bar-container">
+    <div id="progress-elapsed" class="progress-bar progress-elapsed"></div>
+  </div>
 
   <script>
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 2, 28); // March 28
-    const end = new Date(now.getFullYear(), 8, 29);   // September 29
+    function renderSSAProgress(startDate, endDate, now = new Date()) {
+      const total = endDate - startDate;
+      const remaining = endDate - now;
+      const elapsed = now - startDate;
 
-    const total = end - start;
-    const elapsed = now - start;
-    const percent = Math.max(0, Math.min(100, (elapsed / total) * 100));
+      const percentRemaining = Math.max(0, Math.min(100, (remaining / total) * 100));
+      const percentElapsed = Math.max(0, Math.min(100, (elapsed / total) * 100));
 
-    document.getElementById("progress").style.width = percent + "%";
-    document.getElementById("percent").textContent =
-      percent.toFixed(2) + "% of the season has passed.";
+      document.getElementById("progress-remaining").style.width = percentRemaining + "%";
+      document.getElementById("label-remaining").textContent =
+        `${percentRemaining.toFixed(2)}% of the SSA year remains.`;
+
+      document.getElementById("progress-elapsed").style.width = percentElapsed + "%";
+      document.getElementById("label-elapsed").textContent =
+  `In other words, ${percentElapsed.toFixed(2)}% of this final SSA year is done.`;
+
+    }
+
+    const start = new Date(2025, 7); // August 1, 2025
+    const end = new Date(2026, 7);   // August 1, 2026
+    renderSSAProgress(start, end);
   </script>
 </body>
 </html>
