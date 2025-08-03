@@ -83,8 +83,9 @@
       const percentRemaining = Math.max(0, Math.min(100, (remaining / total) * 100));
       const percentElapsed = Math.max(0, Math.min(100, (elapsed / total) * 100));
 
-      // Calculate literal days remaining
+      // Calculate literal days remaining and elapsed
       const daysRemaining = Math.ceil(remaining / (1000 * 60 * 60 * 24));
+      const daysElapsed = Math.floor(elapsed / (1000 * 60 * 60 * 24));
 
       // Update width of progress bars
       document.getElementById("progress-remaining").style.width = percentRemaining + "%";
@@ -93,9 +94,9 @@
       // Update text labels with high precision (8 decimal places)
       document.getElementById("label-remaining").textContent =
         `${percentRemaining.toFixed(8)}% of the SSA year remains (${daysRemaining} days left).`;
-
+      
       document.getElementById("label-elapsed").textContent =
-        `In other words, ${percentElapsed.toFixed(8)}% of this final SSA year has been lived.`;
+        `In other words, ${percentElapsed.toFixed(8)}% of this final SSA year has been lived (${daysElapsed} days so far).`;
     }
 
     // Run update every second for smooth live progress
