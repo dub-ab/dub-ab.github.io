@@ -11,7 +11,8 @@
       --text-color: #fff;
       --overlay-color: rgba(0, 0, 0, 0.4);
       --bar-bg: rgba(255, 255, 255, 0.7);
-      --progress-color: #8A2BE2;
+      --progress-color: #B94E5B;
+      --accent-color: #D97A8C;  /* Soft coral */
       --font-family: 'Segoe UI', sans-serif;
     }
 
@@ -49,6 +50,7 @@
     }
 
     h1 {
+      color: #B94E5B;
       font-size: 1.5em;
       margin-bottom: 1em;
       text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3); /* Subtle depth */
@@ -65,6 +67,7 @@
 
     .progress-bar {
       height: 100%;
+      
       background-color: var(--progress-color);
       width: 0%;
       transition: width 0.5s ease-in-out;
@@ -96,42 +99,30 @@
   const start = new Date(2025, 7); // August 1, 2025
   const end = new Date(2027, 5, 16); // June 16, 2027
 
-  // Render label showing percent completed and days left
-  function renderProgressLabel(start, end) {
+  function updateProgress() {
     const now = new Date();
     const total = end - start;
     const elapsed = now - start;
     const remaining = end - now;
 
-    const percentDone = (elapsed / total) * 100;
-    const daysLeft = Math.ceil(remaining / (1000 * 60 * 60 * 24));
+    const percent = Math.min((elapsed / total) * 100, 100);
+    const daysLeft = Math.max(0, Math.ceil(remaining / (1000 * 60 * 60 * 24)));
+
+    document.getElementById('progress-remaining').style.width = percent.toFixed(2) + '%';
+    document.querySelector('.bar-container').setAttribute('aria-valuenow', percent.toFixed(2));
 
     const label = document.getElementById("label-remaining");
     label.innerHTML =
-      percentDone < 100
-        ? `You're ${percentDone.toFixed(8)}% of the way through your final CUSD stretch. <br> Just ${daysLeft} days until retirement.`
+      percent < 100
+        ? `You're ${percent.toFixed(2)}% of the way through your final CUSD stretch. <br> Just ${daysLeft} days until retirement.`
         : `🎉 It's here!`;
-  }
 
-  // Update progress bar and label every 0.5 seconds
-  function updateProgress() {
-    const now = new Date();
-    const total = end - start;
-    const elapsed = now - start;
-
-    const percent = Math.min((elapsed / total) * 100, 100).toFixed(2);
-    const progressBar = document.getElementById('progress-remaining');
-    const container = document.querySelector('.bar-container');
-
-    progressBar.style.width = percent + '%';
-    container.setAttribute('aria-valuenow', percent);
-
-    renderProgressLabel(start, end);
-    setTimeout(updateProgress, 500); // Update every 0.5 seconds
+    setTimeout(updateProgress, 500);
   }
 
   updateProgress();
 </script>
+
 
 </body>
 </html>
