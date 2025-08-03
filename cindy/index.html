@@ -92,46 +92,46 @@
     <p id="label-remaining" class="label" aria-live="polite"></p>
   </div>
 
-  <script>
-    const start = new Date(2025, 7); // August 1, 2025
-    const end = new Date(2027, 5, 16); // June 16, 2027
+<script>
+  const start = new Date(2025, 7); // August 1, 2025
+  const end = new Date(2027, 5, 16); // June 16, 2027
 
-    // Render high-precision label with percent remaining and days left
-    function renderProgressLabel(start, end) {
-      const now = new Date();
-      const total = end - start;
-      const elapsed = now - start;
-      const remaining = end - now;
+  // Render label showing percent completed and days left
+  function renderProgressLabel(start, end) {
+    const now = new Date();
+    const total = end - start;
+    const elapsed = now - start;
+    const remaining = end - now;
 
-      const percentElapsed = (elapsed / total) * 100;
-      const percentRemaining = 100 - percentElapsed;
-      const daysLeft = Math.ceil(remaining / (1000 * 60 * 60 * 24));
+    const percentDone = (elapsed / total) * 100;
+    const daysLeft = Math.ceil(remaining / (1000 * 60 * 60 * 24));
 
-      const label = document.getElementById("label-remaining");
-      label.innerHTML =
-        percentRemaining > 0
-          ? `You're ${percentRemaining.toFixed(8)}% of the way through your final CUSD stretch. <br> Just ${daysLeft} days until retirement.`
-          : `🎉 It's here!`;
-    }
+    const label = document.getElementById("label-remaining");
+    label.innerHTML =
+      percentDone < 100
+        ? `You're ${percentDone.toFixed(8)}% of the way through your final CUSD stretch. <br> Just ${daysLeft} days until retirement.`
+        : `🎉 It's here!`;
+  }
 
-    // Update progress bar and label every 0.5 seconds
-    function updateProgress() {
-      const now = new Date();
-      const total = end - start;
-      const elapsed = now - start;
+  // Update progress bar and label every 0.5 seconds
+  function updateProgress() {
+    const now = new Date();
+    const total = end - start;
+    const elapsed = now - start;
 
-      const percent = Math.min((elapsed / total) * 100, 100).toFixed(2);
-      const progressBar = document.getElementById('progress-remaining');
-      const container = document.querySelector('.bar-container');
+    const percent = Math.min((elapsed / total) * 100, 100).toFixed(2);
+    const progressBar = document.getElementById('progress-remaining');
+    const container = document.querySelector('.bar-container');
 
-      progressBar.style.width = percent + '%';
-      container.setAttribute('aria-valuenow', percent);
+    progressBar.style.width = percent + '%';
+    container.setAttribute('aria-valuenow', percent);
 
-      renderProgressLabel(start, end);
-      setTimeout(updateProgress, 500); // Update every 0.5 seconds
-    }
+    renderProgressLabel(start, end);
+    setTimeout(updateProgress, 500); // Update every 0.5 seconds
+  }
 
-    updateProgress();
-  </script>
+  updateProgress();
+</script>
+
 </body>
 </html>
