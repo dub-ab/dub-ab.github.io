@@ -96,31 +96,33 @@
   </div>
 
 <script>
-  const start = new Date(2025, 7); // August 1, 2025
-  const end = new Date(2027, 5, 16); // June 16, 2027
+// CUSD Retirement Countdown
+const startCUSD = new Date(2025, 7); // August 1, 2025
+const endCUSD = new Date(2027, 5, 16); // June 16, 2027
 
-  function updateProgress() {
-    const now = new Date();
-    const total = end - start;
-    const elapsed = now - start;
-    const remaining = end - now;
+function updateCUSDProgress() {
+  const now = new Date();
+  const total = endCUSD - startCUSD;
+  const elapsed = now - startCUSD;
+  const remaining = endCUSD - now;
 
-    const percent = Math.min((elapsed / total) * 100, 100);
-    const daysLeft = Math.max(0, Math.ceil(remaining / (1000 * 60 * 60 * 24)));
+  const percent = Math.min((elapsed / total) * 100, 100);
+  const daysLeft = Math.max(0, Math.ceil(remaining / (1000 * 60 * 60 * 24)));
 
-    document.getElementById('progress-remaining').style.width = percent.toFixed(2) + '%';
-    document.querySelector('.bar-container').setAttribute('aria-valuenow', percent.toFixed(2));
+  document.getElementById('progress-remaining').style.width = percent.toFixed(2) + '%';
+  document.querySelector('.bar-container').setAttribute('aria-valuenow', percent.toFixed(2));
 
-    const label = document.getElementById("label-remaining");
-    label.innerHTML =
-      percent < 100
-        ? `You're ${percent.toFixed(2)}% of the way through your final CUSD stretch. <br> Just ${daysLeft} days until retirement.`
-        : `🎉 It's here!`;
+  const label = document.getElementById("label-remaining");
+  label.innerHTML =
+    percent < 100
+      ? `You're ${percent.toFixed(8)}% of the way through your final CUSD stretch. <br> Just ${daysLeft} days until retirement.`
+      : `🎉 It's here!`;
 
-    setTimeout(updateProgress, 500);
-  }
+  setTimeout(updateCUSDProgress, 500);
+}
 
-  updateProgress();
+updateCUSDProgress();
+
 </script>
 
 
