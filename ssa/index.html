@@ -7,7 +7,121 @@
   <style>
     body {
       font-family: sans-serif;
+      text-align: center;<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSA Progress</title>
+  <style>
+    body {
+      font-family: sans-serif;
       text-align: center;
+      padding: 2em;
+      background: #f4f4f4;
+    }
+
+    h1 {
+      margin-bottom: 1em;
+    }
+
+    .bar-container {
+      width: 80%;
+      margin: 1em auto;
+      background: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 30px;
+      width: 0%;
+      transition: width 0.5s ease-in-out;
+    }
+
+    .progress-remaining {
+      background: #2196f3; /* Calm blue */
+    }
+
+    .progress-elapsed {
+      background: #f28b82; /* Soft coral red-orange */
+    }
+
+    .label {
+      margin-top: 1em;
+      font-size: 1.2em;
+    }
+
+    .label-elapsed {
+      font-weight: normal;
+      color: #333;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <h1>SSA Full Retirement Age Progress</h1>
+
+  <div class="bar-container">
+    <div id="progress-remaining" class="progress-bar progress-remaining"></div>
+  </div>
+  <p id="label-remaining" class="label"></p>
+
+
+  <div class="bar-container">
+    <div id="progress-elapsed" class="progress-bar progress-elapsed"></div>
+  </div>
+  <p id="label-elapsed" class="label label-elapsed"></p>
+  <script>
+    // Define boundaries
+    const start = new Date(2025, 7); // August 1, 2025 
+    const end = new Date(2026, 7);   // August 1, 2026
+
+    // Main function to update progress bars and labels
+    function renderSSAProgress(startDate, endDate) {
+      const now = new Date(); // Current time
+
+      // Total duration of SSA year in milliseconds
+      const total = endDate - startDate;
+
+      // Time remaining and elapsed in milliseconds
+      const remaining = endDate - now;
+      const elapsed = now - startDate;
+
+      // Clamp percentages between 0 and 100
+      const percentRemaining = Math.max(0, Math.min(100, (remaining / total) * 100));
+      const percentElapsed = Math.max(0, Math.min(100, (elapsed / total) * 100));
+
+      // Calculate literal days remaining
+      const daysRemaining = remaining / (1000 * 60 * 60 * 24);
+      const daysElapsed = elapsed / (1000 * 60 * 60 * 24);
+
+      const totalHoursElapsed = elapsed / (1000 * 60 * 60);
+      const hours = Math.floor(totalHoursElapsed % 24);
+      const minutes = Math.floor((totalHoursElapsed % 1) * 60);
+      
+      // Update width of progress bars
+      document.getElementById("progress-remaining").style.width = percentRemaining + "%";
+      document.getElementById("progress-elapsed").style.width = percentElapsed + "%";
+
+      // Update text labels with high precision (7 decimal places)
+      document.getElementById("label-remaining").textContent =
+        `${percentRemaining.toFixed(7)}% of the SSA year remains (${daysRemaining.toFixed(2)} days left).`;
+
+      document.getElementById("label-elapsed").textContent =
+        `In other words, ${percentElapsed.toFixed(7)}% of this final SSA year has been lived (${daysElapsed.toFixed(2)} days so far, including ${hours}h ${minutes}m).`;
+    }
+
+      // Initiate the live SSA progress animation
+      function updateSSAProgress() {
+        renderSSAProgress(start, end);
+        requestAnimationFrame(updateSSAProgress);
+      }
+      updateSSAProgress();
+
+  </script>
+</body>
+</html>
       padding: 2em;
       background: #f4f4f4;
     }
