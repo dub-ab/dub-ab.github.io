@@ -10,6 +10,9 @@
       text-align: center;
       padding: 2em;
       background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     h1 {
@@ -31,7 +34,7 @@
     }
 
     .progress-remaining {
-      background: #2196f3; /* Calm blue */
+      background: #1565c0; /* Denim blue */
     }
 
     .progress-elapsed {
@@ -59,54 +62,116 @@
   </div>
   <p id="label-elapsed" class="label label-elapsed"></p>
   
-  <script>
-    // Define boundaries
-    const start = new Date(2025, 7); // August 1, 2025 
-    const end = new Date(2026, 7);   // August 1, 2026
+  <canvas id="pieChart" width="200" height="200"></canvas>
+  <p id="tableRemainingLabel" class="label"></p>
 
-    // Main function to update progress bars and labels
-    function renderSSAProgress(startDate, endDate) {
-      const now = new Date(); // Current time
+<script>
+  // Constants
+  const SSA_START = new Date(2025, 7); // August 1, 2025
+  const SSA_END = new Date(2026, 7);   // August 1, 2026
+  const SSA_TABLE_VALUE = 6.7;
 
-      // Total duration of SSA year in milliseconds
-      const total = endDate - startDate;
+  // DOM Elements
+  const canvas = document.getElementById('pieChart');
+  const ctx = canvas.getContext('2d');
+  const barRemaining = document.getElementById("progress-remaining");
+  const barElapsed = document.getElementById("progress-elapsed");
+  const labelRemaining = document.getElementById("label-remaining");
+  const labelElapsed = document.getElementById("label-elapsed");
+  const labelTable = document.getElementById("tableRemainingLabel");
 
-      // Time remaining and elapsed in milliseconds
-      const remaining = endDate - now;
-      const elapsed = now - startDate;
+  // Utility: Get SSA progress metrics using a shared timestamp
+  function getSSAProgress(startDate, endDate, now) {
+    const totalMs = endDate - startDate;
+    const elapsedMs = now - startDate;
+    const remainingMs = endDate - now;
 
-      // Clamp percentages between 0 and 100
-      const percentRemaining = Math.max(0, Math.min(100, (remaining / total) * 100));
-      const percentElapsed = Math.max(0, Math.min(100, (elapsed / total) * 100));
+    const percentElapsed = Math.max(0, Math.min(100, (elapsedMs / totalMs) * 100));
+    const percentRemaining = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
 
-      // Calculate literal days remaining
-      const daysRemaining = remaining / (1000 * 60 * 60 * 24);
-      const daysElapsed = elapsed / (1000 * 60 * 60 * 24);
+    const daysElapsed = elapsedMs / (1000 * 60 * 60 * 24);
+    const daysRemaining = remainingMs / (1000 * 60 * 60 * 24);
 
-      const totalHoursElapsed = elapsed / (1000 * 60 * 60);
-      const hours = Math.floor(totalHoursElapsed % 24);
-      const minutes = Math.floor((totalHoursElapsed % 1) * 60);
+    const totalHoursElapsed = elapsedMs / (1000 * 60 * 60);
+    const hours = Math.floor(totalHoursElapsed % 24);
+    const minutes = Math.floor((totalHoursElapsed % 1) * 60);
 
-      // Update width of progress bars
-      document.getElementById("progress-remaining").style.width = percentRemaining + "%";
-      document.getElementById("progress-elapsed").style.width = percentElapsed + "%";
+    const tableRemaining = (percentRemaining / 100) * SSA_TABLE_VALUE;
 
-      // Update text labels with high precision (7 decimal places)
-      document.getElementById("label-remaining").textContent =
-        `${percentRemaining.toFixed(7)}% of the SSA year remains (${daysRemaining.toFixed(2)} days left).`;
+    return {
+      percentElapsed,
+      percentRemaining,
+      daysElapsed,
+      daysRemaining,
+      hours,
+      minutes,
+      tableRemaining
+    };
+  }
 
-      document.getElementById("label-elapsed").textContent =
-        `In other words, ${percentElapsed.toFixed(7)}% of this final SSA year has been lived (${daysElapsed.toFixed(2)} days so far, including ${hours}h ${minutes}m).`;
-    }
+  // Draw pie chart
+  function drawPie(percentRemaining) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const radius = canvas.width / 2;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
 
-      // Initiate the live SSA progress animation
-      function updateSSAProgress() {
-        renderSSAProgress(start, end);
-        requestAnimationFrame(updateSSAProgress);
-      }
-      updateSSAProgress();
+    const offset = -Math.PI / 2;
+    const sweep = (percentRemaining / 100) * 2 * Math.PI;
+    const startAngle = offset;
+    const endAngle = offset - sweep;
 
-  </script>
+    // Forfeiture Arc (Outer Ring)
+    ctx.beginPath();
+    ctx.fillStyle = '#1565c0'; // Denim
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Readiness Slice (Inner Arc)
+    ctx.beginPath();
+    ctx.fillStyle = '#D8B4DD'; // Coral
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle, false);
+    ctx.fill();
+  }
+
+  // Unified animation loop
+  function updateSSAVisuals() {
+    const now = new Date(); // Single timestamp for this frame
+    const {
+      percentElapsed,
+      percentRemaining,
+      daysElapsed,
+      daysRemaining,
+      hours,
+      minutes,
+      tableRemaining
+    } = getSSAProgress(SSA_START, SSA_END, now);
+
+    // Update bar charts
+    barRemaining.style.width = `${percentRemaining}%`;
+    barElapsed.style.width = `${percentElapsed}%`;
+
+    // Update textual labels
+    labelRemaining.textContent =
+      `${percentRemaining.toFixed(7)}% of the SSA year remains (${daysRemaining.toFixed(2)} days left).`;
+
+    labelElapsed.textContent =
+      `In other words, ${percentElapsed.toFixed(7)}% of this final SSA year has been lived (${daysElapsed.toFixed(2)} days so far, including ${hours}h ${minutes}m).`;
+
+    labelTable.textContent =
+      `Retiring now would forfeit ${tableRemaining.toFixed(9)}% of my benefit.`;
+
+    // Update pie chart
+    drawPie(percentRemaining);
+
+    requestAnimationFrame(updateSSAVisuals);
+  }
+
+  // Start animation
+  updateSSAVisuals();
+</script>
 
 </body>
 </html>
