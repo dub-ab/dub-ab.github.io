@@ -129,7 +129,8 @@ function obscureDollarAmount(amount, prefixChar = '•••', prefixCount = 2) 
 
   // Mask all but the last digit before the decimal
   const maskedWhole = str.replace(/^(\d+)(?=\.\d+)/, match => {
-    return prefixChar.repeat(prefixCount) + ''.repeat(match.length - 1) + match.slice(-1);
+    const visible = match.slice(-2);
+    return prefixChar.repeat(prefixCount) + ''.repeat(match.length - 2) + visible;
   });
 
   return maskedWhole; // e.g., "XXXXXX7.1234567"
