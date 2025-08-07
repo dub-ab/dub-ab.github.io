@@ -124,12 +124,12 @@
   const labelTable = document.getElementById("tableRemainingLabel");
   const currentBenefitEl = document.getElementById("currentBenefit");
 
-function obscureDollarAmount(amount, prefixChar = 'X', prefixCount = 2) {
+function obscureDollarAmount(amount, prefixChar = '•••', prefixCount = 2) {
   const str = amount.toFixed(7); // e.g., "3167.1234567"
 
   // Mask all but the last digit before the decimal
   const maskedWhole = str.replace(/^(\d+)(?=\.\d+)/, match => {
-    return prefixChar.repeat(prefixCount) + 'X'.repeat(match.length - 1) + match.slice(-1);
+    return prefixChar.repeat(prefixCount) + ''.repeat(match.length - 1) + match.slice(-1);
   });
 
   return maskedWhole; // e.g., "XXXXXX7.1234567"
