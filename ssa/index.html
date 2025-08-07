@@ -83,7 +83,7 @@
   </style>
 </head>
 <body>
-  <h1>SSA Full Retirement Age Progress</h1>
+  <h1>SSA Milestone Tracker</h1>
 
   <div class="bar-container">
     <div id="progress-remaining" class="progress-bar"></div>
@@ -98,7 +98,7 @@
 
   <p style="font-size: 0.9em; color: #555;">
   <span style="display:inline-block; width:14px; height:14px; background:#1565c0; border-radius:3px; margin-right:6px;"></span> Time Remaining &nbsp;
-  <span style="display:inline-block; width:14px; height:14px; background:#D8B4DD; border-radius:3px; margin:0 6px;"></span> Time Lived
+  <span style="display:inline-block; width:14px; height:14px; background:#D8B4DD; border-radius:3px; margin:0 6px;"></span> Time Progressed
 </p>
 
 
@@ -124,105 +124,105 @@
   const labelTable = document.getElementById("tableRemainingLabel");
   const currentBenefitEl = document.getElementById("currentBenefit");
 
-function obscureDollarAmount(amount, prefixChar = '•••', prefixCount = 2) {
-  const str = amount.toFixed(7); // e.g., "3167.1234567"
+  function obscureDollarAmount(amount, prefixChar = '•••', prefixCount = 2) {
+    const str = amount.toFixed(5); // e.g., "3167.1234567"
 
-  // Mask all but the last digit before the decimal
-  const maskedWhole = str.replace(/^(\d+)(?=\.\d+)/, match => {
-    const visible = match.slice(-2);
-    return prefixChar.repeat(prefixCount) + ''.repeat(match.length - 2) + visible;
-  });
+    // Mask all but the last digit before the decimal
+    const maskedWhole = str.replace(/^(\d+)(?=\.\d+)/, match => {
+      const visible = match.slice(-2);
+      return prefixChar.repeat(prefixCount) + ''.repeat(match.length - 2) + visible;
+    });
 
-  return maskedWhole; // e.g., "XXXXXX7.1234567"
-}
-  function getSSAProgress(startDate, endDate, now) {
-    const totalMs = endDate - startDate;
-    const elapsedMs = now - startDate;
-    const remainingMs = endDate - now;
-
-    const percentElapsed = Math.max(0, Math.min(100, (elapsedMs / totalMs) * 100));
-    const percentRemaining = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
-
-    const daysElapsed = elapsedMs / (1000 * 60 * 60 * 24);
-    const daysRemaining = remainingMs / (1000 * 60 * 60 * 24);
-
-    const totalHoursElapsed = elapsedMs / (1000 * 60 * 60);
-    const hours = Math.floor(totalHoursElapsed % 24);
-    const minutes = Math.floor((totalHoursElapsed % 1) * 60);
-
-    const tableRemaining = (percentRemaining / 100) * SSA_TABLE_VALUE;
-
-    return {
-      percentElapsed,
-      percentRemaining,
-      daysElapsed,
-      daysRemaining,
-      hours,
-      minutes,
-      tableRemaining
-    };
+    return maskedWhole; // e.g., "XXXXXX7.1234567"
   }
+    function getSSAProgress(startDate, endDate, now) {
+      const totalMs = endDate - startDate;
+      const elapsedMs = now - startDate;
+      const remainingMs = endDate - now;
 
-  function drawPie(percentRemaining) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const radius = canvas.width / 2;
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+      const percentElapsed = Math.max(0, Math.min(100, (elapsedMs / totalMs) * 100));
+      const percentRemaining = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
 
-    const offset = -Math.PI / 2;
-    const sweep = (percentRemaining / 100) * 2 * Math.PI;
-    const startAngle = offset;
-    const endAngle = offset - sweep;
+      const daysElapsed = elapsedMs / (1000 * 60 * 60 * 24);
+      const daysRemaining = remainingMs / (1000 * 60 * 60 * 24);
 
-    // Outer ring: full circle (denim = remaining)
-    ctx.beginPath();
-    ctx.fillStyle = '#1565c0';
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.fill();
+      const totalHoursElapsed = elapsedMs / (1000 * 60 * 60);
+      const hours = Math.floor(totalHoursElapsed % 24);
+      const minutes = Math.floor((totalHoursElapsed % 1) * 60);
 
-    // Inner slice: elapsed (lavender)
-    ctx.beginPath();
-    ctx.fillStyle = '#D8B4DD';
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, radius, startAngle, endAngle, false);
-    ctx.fill();
-  }
+      const tableRemaining = (percentRemaining / 100) * SSA_TABLE_VALUE;
 
-  function updateSSAVisuals() {
-    const now = new Date();
-    const {
-      percentElapsed,
-      percentRemaining,
-      daysElapsed,
-      daysRemaining,
-      hours,
-      minutes,
-      tableRemaining
-    } = getSSAProgress(SSA_START, SSA_END, now);
+      return {
+        percentElapsed,
+        percentRemaining,
+        daysElapsed,
+        daysRemaining,
+        hours,
+        minutes,
+        tableRemaining
+      };
+    }
 
-    barRemaining.style.width = `${percentRemaining}%`;
+    function drawPie(percentRemaining) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const radius = canvas.width / 2;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
 
-    labelRemaining.textContent =
-      `${percentRemaining.toFixed(6)}% of the SSA year remains (${daysRemaining.toFixed(2)} days left). ` +
-      `In other words, ${percentElapsed.toFixed(6)}% has been lived—${daysElapsed.toFixed(2)} days so far, including ${hours}h ${minutes}m.`;
+      const offset = -Math.PI / 2;
+      const sweep = (percentRemaining / 100) * 2 * Math.PI;
+      const startAngle = offset;
+      const endAngle = offset - sweep;
 
-    const forfeitureDollars = (percentRemaining / 100) * 226.00;
-    const preservedDollars = 226.00 - forfeitureDollars;
-    const currentBenefitAmount = SSA_BASE_BENEFIT + preservedDollars;
+      // Outer ring: full circle (denim = remaining)
+      ctx.beginPath();
+      ctx.fillStyle = '#1565c0';
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.fill();
 
-    labelTable.innerHTML =
-      `Retiring now would forfeit <span class="forfeit">${tableRemaining.toFixed(9)}%</span> of my benefit, or ` +
-      `<span class="forfeit">$${obscureDollarAmount(forfeitureDollars)}</span> would be left on the table. `;
+      // Inner slice: elapsed (lavender)
+      ctx.beginPath();
+      ctx.fillStyle = '#D8B4DD';
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, startAngle, endAngle, false);
+      ctx.fill();
+    }
 
-    currentBenefitEl.textContent = `$${obscureDollarAmount(currentBenefitAmount)}`;
-    currentBenefitEl.title = "Full value hidden for privacy";
+    function updateSSAVisuals() {
+      const now = new Date();
+      const {
+        percentElapsed,
+        percentRemaining,
+        daysElapsed,
+        daysRemaining,
+        hours,
+        minutes,
+        tableRemaining
+      } = getSSAProgress(SSA_START, SSA_END, now);
 
-    drawPie(percentRemaining);
-    requestAnimationFrame(updateSSAVisuals);
-  }
+      barRemaining.style.width = `${percentRemaining}%`;
 
-  updateSSAVisuals();
+      labelRemaining.textContent =
+        `${percentRemaining.toFixed(6)}% of the SSA year remains (${daysRemaining.toFixed(2)} days left). ` +
+        `In other words, ${percentElapsed.toFixed(6)}% has progressed—${daysElapsed.toFixed(2)} days so far, including ${hours}h ${minutes}m.`;
+
+      const forfeitureDollars = (percentRemaining / 100) * 226.00;
+      const preservedDollars = 226.00 - forfeitureDollars;
+      const currentBenefitAmount = SSA_BASE_BENEFIT + preservedDollars;
+
+      labelTable.innerHTML =
+        `Retiring now would forfeit <span class="forfeit">${tableRemaining.toFixed(7)}%</span> of my benefit, or ` +
+        `<span class="forfeit">$${obscureDollarAmount(forfeitureDollars)}</span> would be left on the table. `;
+
+      currentBenefitEl.textContent = `$${obscureDollarAmount(currentBenefitAmount)} `;
+      currentBenefitEl.title = "Full value hidden for privacy";
+
+      drawPie(percentRemaining);
+      requestAnimationFrame(updateSSAVisuals);
+    }
+
+    updateSSAVisuals();
 </script>
 </body>
 </html>
