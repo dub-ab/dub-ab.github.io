@@ -14,73 +14,126 @@
       flex-direction: column;
       align-items: center;
     }
-
+  
     h1 {
       margin-bottom: 1em;
     }
-
+  
     .bar-container {
       width: 80%;
       margin: 1em auto;
-      background: #ddd;
+      background: #D8B4DD;
+      /* Lavender (elapsed) */
       border-radius: 10px;
       overflow: hidden;
     }
-
+  
     .progress-bar {
       height: 30px;
       width: 0%;
+      background: #1565c0;
+      /* Denim (remaining) */
       transition: width 0.5s ease-in-out;
     }
-
-    .progress-remaining {
-      background: #1565c0; /* Denim blue */
-    }
-
-    .progress-elapsed {
-      background: #f28b82; /* Soft coral red-orange */
-    }
-
+  
     .label {
       margin-top: 1em;
       font-size: 1.2em;
     }
-
+  
+    hr {
+      margin: 2em 0;
+      border: none;
+      border-top: 2px solid #ccc;
+      width: 80%;
+    }
+  
+    .label span.dollar {
+      color: #4caf50;
+      /* green for preserved */
+      font-weight: 500;
+    }
+  
+    .label span.forfeit {
+      color: #c62828;
+      /* muted red for forfeited */
+      font-weight: 500;
+    }
+  
+    .benefit-label {
+      font-size: 1.2em;
+      margin-top: 1em;
+    }
+  
+    .benefit-label .highlight {
+      font-weight: bold;
+      color: #2e7d32;
+    }
+  
+    @media (max-width: 600px) {
+      .bar-container {
+        width: 95%;
+      }
+  
+      canvas {
+        width: 150px;
+        height: 150px;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>SSA Full Retirement Age Progress</h1>
 
   <div class="bar-container">
-    <div id="progress-remaining" class="progress-bar progress-remaining"></div>
+    <div id="progress-remaining" class="progress-bar"></div>
   </div>
   <p id="label-remaining" class="label"></p>
 
+  <hr />
 
-  <div class="bar-container">
-    <div id="progress-elapsed" class="progress-bar progress-elapsed"></div>
-  </div>
-  <p id="label-elapsed" class="label label-elapsed"></p>
-  
   <canvas id="pieChart" width="200" height="200"></canvas>
+  
+<!-- ⬇️ Add this SVG legend directly below the canvas -->
+
+  <p style="font-size: 0.9em; color: #555;">
+  <span style="display:inline-block; width:14px; height:14px; background:#1565c0; border-radius:3px; margin-right:6px;"></span> Time Remaining &nbsp;
+  <span style="display:inline-block; width:14px; height:14px; background:#D8B4DD; border-radius:3px; margin:0 6px;"></span> Time Lived
+</p>
+
+
   <p id="tableRemainingLabel" class="label"></p>
 
+  <hr />
+
+  <p class="benefit-label">
+    Current Benefit: <span id="currentBenefit" class="highlight">Loading...</span>
+  </p>
+
 <script>
-  // Constants
   const SSA_START = new Date(2025, 7); // August 1, 2025
   const SSA_END = new Date(2026, 7);   // August 1, 2026
   const SSA_TABLE_VALUE = 6.7;
+  const SSA_BASE_BENEFIT = 3166.00;
+  const SSA_MAX_BENEFIT = SSA_BASE_BENEFIT + 226.00;
 
-  // DOM Elements
   const canvas = document.getElementById('pieChart');
   const ctx = canvas.getContext('2d');
   const barRemaining = document.getElementById("progress-remaining");
-  const barElapsed = document.getElementById("progress-elapsed");
   const labelRemaining = document.getElementById("label-remaining");
-  const labelElapsed = document.getElementById("label-elapsed");
   const labelTable = document.getElementById("tableRemainingLabel");
+  const currentBenefitEl = document.getElementById("currentBenefit");
 
-  // Utility: Get SSA progress metrics using a shared timestamp
+function obscureDollarAmount(amount, prefixChar = 'X', prefixCount = 2) {
+  const str = amount.toFixed(7); // e.g., "3167.1234567"
+
+  // Mask all but the last digit before the decimal
+  const maskedWhole = str.replace(/^(\d+)(?=\.\d+)/, match => {
+    return prefixChar.repeat(prefixCount) + 'X'.repeat(match.length - 1) + match.slice(-1);
+  });
+
+  return maskedWhole; // e.g., "XXXXXX7.1234567"
+}
   function getSSAProgress(startDate, endDate, now) {
     const totalMs = endDate - startDate;
     const elapsedMs = now - startDate;
@@ -109,7 +162,6 @@
     };
   }
 
-  // Draw pie chart
   function drawPie(percentRemaining) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const radius = canvas.width / 2;
@@ -121,24 +173,23 @@
     const startAngle = offset;
     const endAngle = offset - sweep;
 
-    // Forfeiture Arc (Outer Ring)
+    // Outer ring: full circle (denim = remaining)
     ctx.beginPath();
-    ctx.fillStyle = '#1565c0'; // Denim
+    ctx.fillStyle = '#1565c0';
     ctx.moveTo(centerX, centerY);
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     ctx.fill();
 
-    // Readiness Slice (Inner Arc)
+    // Inner slice: elapsed (lavender)
     ctx.beginPath();
-    ctx.fillStyle = '#D8B4DD'; // Coral
+    ctx.fillStyle = '#D8B4DD';
     ctx.moveTo(centerX, centerY);
     ctx.arc(centerX, centerY, radius, startAngle, endAngle, false);
     ctx.fill();
   }
 
-  // Unified animation loop
   function updateSSAVisuals() {
-    const now = new Date(); // Single timestamp for this frame
+    const now = new Date();
     const {
       percentElapsed,
       percentRemaining,
@@ -149,29 +200,28 @@
       tableRemaining
     } = getSSAProgress(SSA_START, SSA_END, now);
 
-    // Update bar charts
     barRemaining.style.width = `${percentRemaining}%`;
-    barElapsed.style.width = `${percentElapsed}%`;
 
-    // Update textual labels
     labelRemaining.textContent =
-      `${percentRemaining.toFixed(7)}% of the SSA year remains (${daysRemaining.toFixed(2)} days left).`;
+      `${percentRemaining.toFixed(6)}% of the SSA year remains (${daysRemaining.toFixed(2)} days left). ` +
+      `In other words, ${percentElapsed.toFixed(6)}% has been lived—${daysElapsed.toFixed(2)} days so far, including ${hours}h ${minutes}m.`;
 
-    labelElapsed.textContent =
-      `In other words, ${percentElapsed.toFixed(7)}% of this final SSA year has been lived (${daysElapsed.toFixed(2)} days so far, including ${hours}h ${minutes}m).`;
+    const forfeitureDollars = (percentRemaining / 100) * 226.00;
+    const preservedDollars = 226.00 - forfeitureDollars;
+    const currentBenefitAmount = SSA_BASE_BENEFIT + preservedDollars;
 
-    labelTable.textContent =
-      `Retiring now would forfeit ${tableRemaining.toFixed(9)}% of my benefit.`;
+    labelTable.innerHTML =
+      `Retiring now would forfeit <span class="forfeit">${tableRemaining.toFixed(9)}%</span> of my benefit, or ` +
+      `<span class="forfeit">$${obscureDollarAmount(forfeitureDollars)}</span> would be left on the table. `;
 
-    // Update pie chart
+    currentBenefitEl.textContent = `$${obscureDollarAmount(currentBenefitAmount)}`;
+    currentBenefitEl.title = "Full value hidden for privacy";
+
     drawPie(percentRemaining);
-
     requestAnimationFrame(updateSSAVisuals);
   }
 
-  // Start animation
   updateSSAVisuals();
 </script>
-
 </body>
 </html>
