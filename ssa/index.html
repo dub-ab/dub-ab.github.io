@@ -1,6 +1,233 @@
-hr {
-  margin: 2em auto;
-  border: none;
-  border-top: 2px solid #ccc;
-  width: 80%;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSA Progress</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 0.5em;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    h1 {
+      margin-bottom: 0.5em;
+    }
+  
+    .label {
+      margin-top: 1em;
+      font-size: 1.2em;
+    }
+  
+    hr {
+      margin: 2em auto;
+      border: none;
+      border-top: 2px solid #ccc;
+      width: 80%;
+    }
+  
+    .label span.dollar {
+      color: #4caf50;
+      /* green for preserved */
+      font-weight: 500;
+    }
+  
+    .label span.forfeit {
+      color: #c62828;
+      /* muted red for forfeited */
+      font-weight: 500;
+    }
+  
+    .benefit-label {
+      font-size: 1.2em;
+      margin-top: 1em;
+    }
+  
+    .benefit-label .highlight {
+      font-weight: bold;
+      color: #2e7d32;
+    }
+  
+    @media (max-width: 600px) {
+      .bar-container {
+        width: 95%;
+      }
+  
+      canvas {
+        width: 150px;
+        height: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SSA  Tracker</h1>
+  </header>
+
+
+  
+  <main>
+    <!-- 📆 Time Progress Section -->
+    <section aria-labelledby="time-heading">
+      <h2 id="time-heading">📆 Time Progress</h2>
+    
+      <div class="chart-wrapper">
+        <canvas id="pieChart" width="200" height="200"></canvas>
+        <p style="font-size: 0.9em; color: #555;">
+          <span style="display:inline-block; width:14px; height:14px; background:#1565c0; border-radius:3px; margin-right:6px;"></span> Time Remaining &nbsp;
+          <span style="display:inline-block; width:14px; height:14px; background:#D8B4DD; border-radius:3px; margin:0 6px;"></span> Time Progressed
+        </p>
+        <p id="label-remaining" class="label"></p>
+    
+      </div>
+    </section>
+
+    <!-- 🪄 Narrative Bridge -->
+    <section aria-hidden="true">
+      <p style="margin-top: 2em; font-style: italic; color: #555;">
+        As each day passes, your estimated benefit adjusts—reflecting both time earned and time forfeited.
+      </p>
+    </section>
+
+    <hr />
+
+    <!-- 💰 Benefit Impact Section -->
+<section aria-labelledby="benefit-heading">
+  <h2 id="benefit-heading">💰 Benefit Impact</h2>
+  <p id="tableRemainingLabel" class="label">
+    Retiring now would forfeit <span id="forfeiturePercent" class="forfeit">...</span> of your benefit,  
+    or <span id="forfeitureAmount" class="forfeit" title="Full value obscured for privacy">...</span> would be left on the table.
+  </p>
+
+  <p class="benefit-label">
+    Estimated Benefit: <span id="currentBenefit" class="highlight" title="Full value hidden for privacy">Loading...</span>
+  </p>
+</section>
+
+  </main>
+
+<script>
+  const SSA_START = new Date(2025, 7); // August 1, 2025
+  const SSA_END = new Date(2026, 7);   // August 1, 2026
+  const SSA_TABLE_VALUE = 6.7;
+  const SSA_BASE_BENEFIT = 3166.00;
+  const SSA_MAX_BENEFIT = SSA_BASE_BENEFIT + 226.00;
+
+  const canvas = document.getElementById('pieChart');
+  const ctx = canvas.getContext('2d');
+
+  const labelRemaining = document.getElementById("label-remaining");
+  const labelTable = document.getElementById("tableRemainingLabel");
+  const currentBenefitEl = document.getElementById("currentBenefit");
+
+  function obscureDollarAmount(amount, expose=4, prefixChar = '•••', prefixCount = 2) {
+    const str = amount.toFixed(5); // e.g., "3167.1234567"
+
+    // Mask all but the last digit before the decimal
+    const maskedWhole = str.replace(/^(\d+)(?=\.\d+)/, match => {
+      const visible = match.slice(-expose);
+      return prefixChar.repeat(prefixCount) + ''.repeat(match.length - 2) + visible;
+    });
+
+    return maskedWhole; // e.g., "XXXXXX7.1234567"
+  }
+
+  function getSSAProgress(startDate, endDate, now) {
+    const totalMs = endDate - startDate;
+    const elapsedMs = now - startDate;
+    const remainingMs = endDate - now;
+
+    const percentElapsed = Math.max(0, Math.min(100, (elapsedMs / totalMs) * 100));
+    const percentRemaining = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
+
+    const daysElapsed = elapsedMs / (1000 * 60 * 60 * 24);
+    const daysRemaining = remainingMs / (1000 * 60 * 60 * 24);
+
+    const totalHoursElapsed = elapsedMs / (1000 * 60 * 60);
+    const hours = Math.floor(totalHoursElapsed % 24);
+    const minutes = Math.floor((totalHoursElapsed % 1) * 60);
+
+    const tableRemaining = (percentRemaining / 100) * SSA_TABLE_VALUE;
+
+    return {
+      percentElapsed,
+      percentRemaining,
+      daysElapsed,
+      daysRemaining,
+      hours,
+      minutes,
+      tableRemaining
+    };
+  }
+
+  function drawPie(percentRemaining) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const radius = canvas.width / 2;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    const offset = -Math.PI / 2;
+    const percentElapsed = 100 - percentRemaining;
+    const sweep = (percentRemaining / 100) * 2 * Math.PI;
+    const startAngle = offset;
+    const endAngle = offset + sweep;
+
+    // Outer ring: full circle (lavender = progressed)
+    ctx.beginPath();
+    ctx.fillStyle = '#D8B4DD';
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Inner slice: remaining (denim)
+    ctx.beginPath();
+    ctx.fillStyle = '#1565c0';
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.fill();
+  }
+
+
+  function updateSSAVisuals() {
+    const now = new Date();
+    const {
+      percentElapsed,
+      percentRemaining,
+      daysElapsed,
+      daysRemaining,
+      hours,
+      minutes,
+      tableRemaining
+    } = getSSAProgress(SSA_START, SSA_END, now);
+
+
+
+    labelRemaining.textContent =
+      `${percentRemaining.toFixed(6)}% of the SSA year remains (${daysRemaining.toFixed(2)} days left). ` +
+      `In other words, ${percentElapsed.toFixed(6)}% has progressed—${daysElapsed.toFixed(2)} days so far, including ${hours}h ${minutes}m.`;
+
+    const forfeitureDollars = (percentRemaining / 100) * 226.00;
+    const preservedDollars = 226.00 - forfeitureDollars;
+    const currentBenefitAmount = SSA_BASE_BENEFIT + preservedDollars;
+
+document.getElementById("forfeiturePercent").textContent = `${tableRemaining.toFixed(7)}%`;
+document.getElementById("forfeitureAmount").textContent = `$${obscureDollarAmount(forfeitureDollars, expose=2)}`;
+
+
+    currentBenefitEl.textContent = `$${obscureDollarAmount(currentBenefitAmount, expose=3, )} `;
+    currentBenefitEl.title = "Full value hidden for privacy";
+
+    drawPie(percentRemaining);
+    requestAnimationFrame(updateSSAVisuals);
+  }
+
+  updateSSAVisuals();
+</script>
+</body>
+</html>
